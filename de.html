@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kontrollsystem für Ihr Unternehmen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* Идея: деловая бумага «паспорт объекта» — сетка, крупные цифры сроков, телефонные карточки как главные иллюстрации */
+:root{
+  --bg:#f3f6f4;--card:#ffffff;--ink:#14211f;--muted:#46585a;--line:#d3dedb;
+  --accent:#0d5c63;--accent-ink:#ffffff;--soft:#e2efee;
+  --signal:#f2a31b;--signal-text:#8a4b00;--signal-soft:#fdf1d9;
+  --ok:#1f7a45;--ok-soft:#e2f2e8;--bad:#b3261e;--bad-soft:#fbe7e4;
+  --display:"Unbounded","Onest",system-ui,sans-serif;
+  --body:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1818;--card:#152425;--ink:#e8f1ef;--muted:#a8bcba;--line:#2a4041;
+    --accent:#58c2c7;--accent-ink:#06201f;--soft:#1a3335;
+    --signal:#f5b041;--signal-text:#f5c26b;--signal-soft:#33280f;
+    --ok:#6fd199;--ok-soft:#163626;--bad:#ff9a90;--bad-soft:#3b1a17;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1818;--card:#152425;--ink:#e8f1ef;--muted:#a8bcba;--line:#2a4041;
+  --accent:#58c2c7;--accent-ink:#06201f;--soft:#1a3335;
+  --signal:#f5b041;--signal-text:#f5c26b;--signal-soft:#33280f;
+  --ok:#6fd199;--ok-soft:#163626;--bad:#ff9a90;--bad-soft:#3b1a17;color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 20px/1.6 var(--body)}
+.wrap{max-width:1000px;margin:0 auto;padding:0 18px 90px;display:flex;flex-direction:column;gap:64px}
+h1,h2,h3{text-wrap:balance;margin:0}
+h1{font:700 clamp(28px,5.4vw,46px)/1.2 var(--display);letter-spacing:-.01em}
+h2{font:700 clamp(24px,3.6vw,32px)/1.25 var(--display);letter-spacing:-.01em}
+h3{font:700 24px/1.3 var(--body)}
+p{margin:0}
+a{color:var(--accent)}
+ul{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+section{display:flex;flex-direction:column;gap:24px}
+.eyebrow{font-size:16px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lead{font-size:22px;color:var(--muted);max-width:62ch}
+.small{font-size:17px;color:var(--muted)}
+
+/* шапка */
+.top{background:var(--accent);color:var(--accent-ink);margin:0 0 64px;padding:34px 18px 40px}
+.top-in{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.brand{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:17px;font-weight:600;letter-spacing:.04em}
+.brand b{font:700 20px var(--display);letter-spacing:0}
+.top .lead{color:inherit;opacity:.92}
+.stripe{height:8px;border-radius:4px;background:repeating-linear-gradient(135deg,var(--signal) 0 18px,transparent 18px 36px);opacity:.95}
+.who{display:flex;gap:10px;flex-wrap:wrap;font-size:17px}
+.who span{background:rgba(255,255,255,.14);border-radius:6px;padding:6px 12px}
+
+/* ваш запрос */
+.ask{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.ask div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:8px}
+.ask i{font:700 15px var(--display);font-style:normal;color:var(--signal-text)}
+.ask b{font-size:21px;line-height:1.3}
+.ask span{font-size:17px;color:var(--muted)}
+
+/* схема */
+.flow{display:grid;grid-template-columns:1fr 44px 1fr 44px 1fr;align-items:stretch;gap:0}
+.col{display:flex;flex-direction:column;gap:12px}
+.col h4{margin:0;font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.node{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-size:18px;line-height:1.4}
+.node b{display:block;font-size:19px}
+.node.core{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);flex:1;justify-content:center;display:flex;flex-direction:column;gap:6px}
+.node.core ul{font-size:18px;gap:4px}
+.node.owner{border:2px solid var(--signal)}
+.arr{display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--signal-text);font-weight:700}
+@media(max-width:760px){
+  .flow{grid-template-columns:1fr}
+  .arr{transform:rotate(90deg);height:38px}
+}
+
+/* телефоны */
+.phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:26px;align-items:start}
+.phone-box{display:flex;flex-direction:column;gap:12px}
+.phone-box .cap{font-size:18px;color:var(--muted)}
+.phone-box .cap b{color:var(--ink)}
+.phone{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:20px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 30px rgba(10,40,40,.08);max-width:360px;width:100%}
+.ph-head{display:flex;justify-content:space-between;gap:8px;font-size:16px;color:var(--muted)}
+.ph-head a,.ph-head u{color:var(--accent);font-weight:600;text-decoration:none}
+.big{font:700 44px/1 var(--display)}
+.big small{font:500 17px/1.3 var(--body);color:var(--muted);display:block;margin-top:6px}
+.row{background:var(--soft);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:18px;line-height:1.35}
+.row.hot{border:2px solid var(--accent)}
+.row .t{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.row .t b{font-size:19px}
+.pill{font-size:15px;font-weight:700;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.warn{background:var(--signal-soft);color:var(--signal-text)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{flex:1;min-width:110px;text-align:center;border-radius:12px;padding:12px 10px;font-size:17px;font-weight:700;background:var(--soft);color:var(--accent)}
+.btn.main{background:var(--accent);color:var(--accent-ink)}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mini div{background:var(--soft);border-radius:12px;padding:10px;text-align:center}
+.mini b{display:block;font:700 26px/1.1 var(--display)}
+.mini small{font-size:14px;color:var(--muted);line-height:1.2;display:block;margin-top:4px}
+.example{font-size:15px;color:var(--signal-text);font-weight:600}
+
+/* дашборд */
+.dash{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(10,40,40,.08)}
+.dash-bar{display:flex;gap:7px;align-items:center;padding:12px 16px;background:var(--soft);font-size:15px;color:var(--muted);flex-wrap:wrap}
+.dash-bar i{width:11px;height:11px;border-radius:50%;background:var(--line);display:block}
+.dash-bar span{margin-left:8px}
+.dash-body{padding:18px;display:flex;flex-direction:column;gap:14px}
+.mini4{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.mini4 div{background:var(--soft);border-radius:12px;padding:12px;text-align:center}
+.mini4 b{display:block;font:700 34px/1.1 var(--display)}
+.mini4 b.r{color:var(--bad)}
+.mini4 small{font-size:15px;color:var(--muted);line-height:1.25;display:block;margin-top:4px}
+.dash-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+/* пакеты */
+.pk{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;align-items:stretch}
+.pack{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px;position:relative}
+.pack.rec{border:3px solid var(--signal)}
+.pack .tag{position:absolute;top:-15px;left:20px;background:var(--signal);color:#1c1300;font-size:15px;font-weight:700;padding:3px 12px;border-radius:999px}
+.pack .for{font-size:17px;color:var(--muted)}
+.pack .cost{font:700 28px/1.2 var(--display)}
+.pack .cost small{display:block;font:500 17px var(--body);color:var(--muted);margin-top:4px}
+.pack ul{font-size:18px}
+.pack .sub{border-top:1px solid var(--line);padding-top:12px;font-size:17px;color:var(--muted)}
+/* модули */
+.mod{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px;display:flex;flex-direction:column;gap:18px;border-top:8px solid var(--accent)}
+.mod-head{display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+.mod-head .no{font:700 16px var(--display);color:var(--signal-text);background:var(--signal-soft);border-radius:8px;padding:6px 10px}
+.mod .status{margin-left:auto}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px}
+.cols h5{margin:0 0 8px;font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.price-line{display:flex;gap:24px;flex-wrap:wrap;align-items:baseline;border-top:1px solid var(--line);padding-top:16px}
+.price-line b{font:700 26px var(--display)}
+.price-line span{font-size:17px;color:var(--muted)}
+
+/* этапы */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.step .when{font:700 15px var(--display);color:var(--accent)}
+.bar{height:10px;border-radius:5px;background:var(--soft);position:relative;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;border-radius:5px;background:var(--signal)}
+
+/* цены */
+.tbl{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:18px;min-width:560px}
+th,td{text-align:left;padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+tr.total td{font-weight:700;font-size:20px;background:var(--soft);border-bottom:0}
+.note{background:var(--signal-soft);border-radius:10px;padding:16px 18px;font-size:18px;border-left:6px solid var(--signal)}
+
+/* вопросы / безопасность */
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:12px}
+.next{counter-reset:n;list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.next li{counter-increment:n;background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:20px 20px 20px 70px;position:relative}
+.next li:before{content:counter(n);position:absolute;left:18px;top:16px;width:38px;height:38px;border-radius:50%;background:var(--signal);color:#1c1300;font:700 18px/38px var(--display);text-align:center}
+.next b{display:block;font-size:21px}
+footer{font-size:17px;color:var(--muted);border-top:1px solid var(--line);padding-top:18px}
+:focus-visible{outline:3px solid var(--signal);outline-offset:2px}
+</style>
+</head>
+<body>
+<nav style="text-align:right;padding:8px 18px;font:500 16px system-ui"><a href="/">RU</a> · <a href="/en.html">EN</a> · <a href="/de.html">DE</a></nav>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><b>Dastgir</b><span>KI-Studio · Angebot · 14. November 2026</span></div>
+    <div class="stripe" aria-hidden="true"></div>
+    <h1>Ausschreibungen, Lager und Fristen im Griff. Bericht für den Inhaber jederzeit</h1>
+    <p class="lead">Ein System, das Ausschreibungen findet, Chargenbestände, Haltbarkeiten, Zertifikate und Verträge überwacht, die Verantwortlichen rechtzeitig erinnert und dem Inhaber das Gesamtbild über alle Länder zeigt. Chargen mit ablaufender Haltbarkeit sind früh sichtbar: Sie werden verkauft statt abgeschrieben.</p>
+    <div class="who"><span>Für: Anax Group</span><span>Grundlage: unser Ausschreibungsmodul. Wir zeigen es live beim Termin</span></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<p class="lead" style="font-size:19px">Auf dieser Seite: <a href="#pakety">drei Pakete und Preise</a> · <a href="#kak">so funktioniert es</a> · <a href="#dalee">nächster Schritt</a></p>
+
+<section id="dash">
+  <div class="eyebrow">So sieht das Ergebnis aus</div>
+  <h2>Die Inhaberseite: alles Wichtige auf einem Bildschirm</h2>
+  <p class="small">Alle Beispiele auf dieser Seite sind fiktiv. Wir setzen Ihre Daten ein.</p>
+  <div class="phone-box">
+    <div class="dash" aria-label="Beispiel: Dashboard-Seite">
+      <div class="dash-bar"><i></i><i></i><i></i><span>Kontrolle · heute, 15:20 · vor 2 Minuten aktualisiert</span></div>
+      <div class="dash-body">
+        <div class="mini4">
+          <div><b>6</b><small>neue Ausschreibungen</small></div>
+          <div><b class="r">3</b><small>Lagerpositionen unter Mindestbestand</small></div>
+          <div><b class="r">1</b><small>überschrittene Frist</small></div>
+          <div><b>4</b><small>Fristen diese Woche</small></div>
+        </div>
+        <div class="dash-cols">
+          <div class="row hot"><div class="t"><b>Ausschreibungen</b><span class="pill warn">4 Arbeitstage</span></div><span class="small">Lieferung von Enzymen und Starterkulturen für eine Molkerei, 38 000 €. Abgabe in 4 Arbeitstagen. Verantwortlich: Einkaufsmanager</span></div>
+          <div class="row"><div class="t"><b>Lager</b><span class="pill bad">Bestellung nötig</span></div><span class="small">Weinhefe, Charge 2411: 12 kg, haltbar bis 30.11, zuerst verwenden. Stabilisator: 40 von 150 kg, Bestellung nötig</span></div>
+          <div class="row"><div class="t"><b>Fristen</b><span class="pill warn">01.12</span></div><span class="small">Zertifikat für Reinigungsmittel (Usbekistan) läuft am 01.12 ab. Verantwortlich: Büro Taschkent</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="cap"><b>Dashboard.</b> Öffnet sich auf Smartphone und Computer. Es aktualisiert sich selbst, und wenn etwas Wichtiges passiert, kommt eine Nachricht mit Link.</p>
+    <span class="example">Beispiel, fiktive Daten</span>
+  </div>
+
+</section>
+
+<section>
+  <div class="eyebrow">Ihre Anfrage</div>
+  <h2>Die vier Aufgaben, die Sie gestellt haben</h2>
+  <div class="ask">
+    <div><i>01</i><b>Ausschreibungen finden</b><span>und die Verantwortlichen informieren</span></div>
+    <div><i>02</i><b>Lager kontrollieren</b><span>Bestände, Zugänge, Abgänge</span></div>
+    <div><i>03</i><b>Fristen überwachen</b><span>Verträge, Produktzertifikate und -registrierungen, Genehmigungen je Land</span></div>
+    <div><i>04</i><b>Bericht für den Inhaber</b><span>jederzeit, auf Abruf</span></div>
+  </div>
+  <p class="lead">Ein Zutatenlieferant verliert Geld, wenn abgelaufene Chargen abgeschrieben werden oder Lieferungen wegen eines abgelaufenen Zertifikats stoppen. Wir bündeln Ihre Aufgaben in einem System statt in vier getrennten Programmen. Der Inhaber öffnet die Seite und sieht, was passiert ist. Ein Mitarbeiter erhält eine Nachricht, tippt auf eine Schaltfläche, und die Aufgabe ist erledigt oder weitergegeben.</p>
+</section>
+
+<section>
+  <div class="eyebrow" id="kak">So funktioniert es</div>
+  <h2>Die Daten laufen an einem Punkt zusammen, jeder erhält nur, was ihn betrifft</h2>
+  <div class="flow" role="img" aria-label="Schema: Datenquellen, das System von Dastgir, Mitarbeiter in Telegram">
+    <div class="col">
+      <h4>Datenquellen</h4>
+      <div class="node"><b>Vergabeplattformen Ihrer Länder</b>zum Beispiel TED (EU), Prozorro (Ukraine), Vergabeportale in Georgien und Usbekistan sowie weitere nach Ihrer Liste; die Verfügbarkeit der Daten prüfen wir vor dem Start</div>
+      <div class="node"><b>Lager</b>Ihre Warenwirtschaft oder Tabelle; gibt es keine Lagerbuchhaltung, werden Zu- und Abgänge im Bot erfasst (Paket „Optimal“)</div>
+      <div class="node"><b>Verträge, Zertifikate, E-Mails</b>Fristenregister, geschäftliches Postfach</div>
+    </div>
+    <div class="arr" aria-hidden="true">→</div>
+    <div class="col">
+      <h4>Was das System tut</h4>
+      <div class="node core"><b>Kontrollsystem</b>
+        <ul><li>findet und filtert</li><li>berechnet Bestände und Fristen</li><li>weist Verantwortliche zu</li><li>erinnert häufiger und bezieht die Führungskraft ein</li></ul>
+      </div>
+    </div>
+    <div class="arr" aria-hidden="true">→</div>
+    <div class="col">
+      <h4>Wer was erhält</h4>
+      <div class="node"><b>Verantwortliche</b>Nachricht in Telegram oder per E-Mail (den Kanal wählen Sie), in den Paketen „Optimal“ und „Maximum“ zusätzlich die Schaltflächen „Übernehme“, „Erledigt“, „Weitergeben“</div>
+      <div class="node"><b>Führungskraft</b>sieht, was überfällig ist oder von niemandem übernommen wurde</div>
+      <div class="node owner"><b>Inhaber</b>eine Dashboard-Seite, die sich selbst aktualisiert, und eine Benachrichtigung, wenn dort etwas Wichtiges erscheint</div>
+    </div>
+  </div>
+</section>
+
+<style>
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;counter-reset:h}
+.how div.st{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 16px;position:relative}
+.how div.st:before{counter-increment:h;content:counter(h);display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font:700 18px var(--display);margin-bottom:10px}
+.how b{display:block;font-size:20px;margin-bottom:4px}
+.how span{font-size:17px;color:var(--muted)}
+.how .ai{border-color:var(--signal);background:var(--signal-soft)}
+.how-note{margin-top:14px;font-size:18px;color:var(--muted)}
+</style>
+<section id="skhema">
+  <div class="eyebrow">Ablauf</div>
+  <h2>So funktioniert es: vier Schritte, KI nur dort, wo sie gebraucht wird</h2>
+  <div class="how">
+    <div class="st"><b>Daten abrufen</b><span>Nach Zeitplan, 1–2 Mal täglich: Vergabeplattformen, Ihre Lagertabelle oder Ihr Lagerprogramm, das Register für Fristen und Zertifikate.</span></div>
+    <div class="st"><b>An einem Ort speichern</b><span>Auf dem gesicherten Server des Studios. Die Daten gehören nur Ihnen, Zugriff nach Rollen.</span></div>
+    <div class="st"><b>Anzeigen</b><span>Eine Dashboard-Seite für die Geschäftsleitung, Nachrichten und Schaltflächen für Mitarbeiter in Telegram oder per E-Mail.</span></div>
+    <div class="st ai"><b>KI-Assistent (Paket „Maximum“)</b><span>Beantwortet Fragen in einfacher Sprache und findet Fristen in E-Mails. Die Entscheidung bestätigt immer ein Mensch.</span></div>
+  </div>
+  <p class="how-note">In den Paketen „Basis“ und „Optimal“ läuft alles ohne KI: klassische, bewährte Automatisierung. Die monatliche Gebühr deckt Serverbetrieb, Updates, Backups und Support.</p>
+</section>
+
+<section>
+  <div class="eyebrow">So sieht es aus</div>
+  <h2>Nachrichten an Mitarbeiter</h2>
+  <p class="small">Unten sehen Sie Beispielnachrichten. Die Daten darin sind fiktiv.</p>
+
+  <div class="phones">
+
+    <div class="phone-box">
+      <div class="phone" aria-label="Beispiel: morgendliche Übersicht der Ausschreibungen">
+        <div class="ph-head"><span>Ausschreibungen · 08:30</span><a>Alle 6 →</a></div>
+        <div class="big">6<small>neue passend zu Ihrem Profil</small></div>
+        <div class="row hot"><div class="t"><b>38 000 €</b><span class="pill warn">4 Arbeitstage</span></div>Enzyme und Starterkulturen für eine Molkerei<span class="small">verantwortlich: Einkaufsmanager</span></div>
+        <div class="row"><div class="t"><b>12 400 €</b><span class="pill warn">5 Arbeitstage</span></div>Lieferung von Reinigungsmitteln für eine Brauerei</div>
+        <div class="btns"><span class="btn main">Übernehme Nr. 1</span><span class="btn">Überspringen</span></div>
+      </div>
+      <p class="cap"><b>Ausschreibungen.</b> Diese Übersicht kommt jeden Morgen. Wir richten sie auf Ihr Profil aus und ergänzen die Zuweisung eines Verantwortlichen sowie eine Erinnerung an die Abgabefrist.</p>
+      <span class="example">Beispiel, fiktive Daten</span>
+    </div>
+
+    <div class="phone-box">
+      <div class="phone" aria-label="Beispiel: Fristerinnerung">
+        <div class="ph-head"><span>Frist · 09:00</span><u>Für: Büro Taschkent</u></div>
+        <div class="big" style="color:var(--bad)">1 Arbeitstag<small>bis das Zertifikat abläuft</small></div>
+        <div class="row hot"><b>Zertifikat für Reinigungsmittel verlängern</b>Usbekistan, Einfuhrgenehmigung<span class="small">Frist: Mo, 16.11</span></div>
+        <div class="row"><b>Was zu tun ist</b><span class="small">Dokumente und Link über die Schaltfläche. Markieren Sie die Aufgabe, sobald der Verlängerungsantrag gestellt ist.</span></div>
+        <div class="btns"><span class="btn main">Erledigt</span><span class="btn">Verschieben</span><span class="btn">Weitergeben</span></div>
+      </div>
+      <p class="cap"><b>Fristen.</b> Erinnerungen kommen 14, 7, 3 und 1 Kalendertag vorher. Bleibt eine Antwort aus, geht die Nachricht an die Führungskraft.</p>
+      <span class="example">Beispiel, fiktive Daten</span>
+    </div>
+
+
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Was das System überwacht</div>
+  <h2>Die vier Bereiche aus Ihrer Anfrage</h2>
+  <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+    <div class="mod"><div class="mod-head"><span class="no">01</span><h3>Ausschreibungen</h3></div>
+      <ul>
+        <li>Sucht jeden Morgen Ausschreibungen nach Ihrem Profil: Stichwörter, Regionen, Mindestwert</li>
+        <li>Wählt passende aus und zeigt Preis und Abgabefrist</li>
+        <li>Weist einen Verantwortlichen zu und erinnert 3 und 1 Arbeitstag vor der Abgabefrist</li>
+        <li>Plattformen binden wir nach Ihrer Länderliste an, kostenpflichtige Tarife der Plattformen tragen Sie</li>
+      </ul></div>
+    <div class="mod"><div class="mod-head"><span class="no">02</span><h3>Lager</h3></div>
+      <ul>
+        <li>Bestände an Zutaten, Kulturen, Enzymen und Reinigungsmitteln</li>
+        <li>Zu- und Abgänge kommen aus einer Tabelle, aus Ihrer Warenwirtschaft oder werden mit zwei Klicks im Bot erfasst (Paket „Optimal“)</li>
+        <li>Haltbarkeit der Chargen: meldet 60 und 30 Tage vorher, was zuerst verkauft oder verwendet werden muss</li>
+        <li>Meldet, wenn eine Position unter den Mindestbestand fällt</li>
+        <li>Bereitet einen Bestellentwurf an den Lieferanten vor, Versand auf Ihre Anweisung</li>
+        <li>Wird das Lager in 1C geführt, nennen wir den Preis nach Sichtung der Datenbank</li>
+      </ul></div>
+    <div class="mod"><div class="mod-head"><span class="no">03</span><h3>Fristen und E-Mails</h3></div>
+      <ul>
+        <li>Fristenregister: Produktzertifikate und -registrierungen je Land, Genehmigungen, Vertragsende, Zahlungen</li>
+        <li>Erinnert 14, 7, 3 und 1 Kalendertag vorher und bezieht bei Fristüberschreitung die Führungskraft ein</li>
+        <li>Das Lesen eingehender E-Mails und das Erkennen von Fristen darin gibt es im Paket „Maximum“: KI kann eine E-Mail übersehen, deshalb bleibt das Register maßgeblich, das Postfach dient als Absicherung</li>
+      </ul></div>
+    <div class="mod"><div class="mod-head"><span class="no">04</span><h3>Bericht für den Inhaber</h3></div>
+      <ul>
+        <li>Alle drei Bereiche an einem Ort: was läuft, was hängt, was überfällig ist und bei wem</li>
+        <li>Jederzeit, ohne Anrufe bei Mitarbeitern und ohne Tabellen</li>
+        <li>PDF zum Drucken oder Weiterleiten</li>
+      </ul></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow" id="pakety">Drei Wege zum Ziel</div>
+  <h2>Wählen Sie ein Paket: vom „Überblick“ bis zur „Steuerung der Aufgaben“</h2>
+  <div class="pk">
+
+    <div class="pack">
+      <h3>Basis</h3>
+      <div class="for">Der Inhaber will den Überblick behalten und nichts Wichtiges verpassen</div>
+      <div class="cost">Preis auf Anfrage<small>einen Richtwert in Euro senden wir innerhalb von 1 Arbeitstag nach dem Gespräch</small></div>
+      <ul>
+        <li>Dashboard-Seite mit Ausschreibungen, Lager und Fristen</li>
+        <li>Aktualisiert sich selbst nach Zeitplan</li>
+        <li>Benachrichtigung in Telegram mit Link, wenn dort etwas Wichtiges erscheint</li>
+        <li>Bericht und PDF jederzeit</li>
+      </ul>
+      <div class="sub">Mitarbeiter erhalten Benachrichtigungen, aber keine Schaltflächen und keine Aufgabenübergabe.</div>
+    </div>
+
+    <div class="pack rec">
+      <span class="tag">Empfehlung</span>
+      <h3>Optimal</h3>
+      <div class="for">Aufgaben sollen zwischen Mitarbeitern nicht verloren gehen</div>
+      <div class="cost">Preis auf Anfrage<small>einen Richtwert in Euro senden wir innerhalb von 1 Arbeitstag nach dem Gespräch</small></div>
+      <ul>
+        <li>Alles aus dem Paket „Basis“</li>
+        <li>Telegram-Bot für Mitarbeiter: „Übernehme“, „Erledigt“, „Verschieben“, „Weitergeben“</li>
+        <li>Zuweisung von Verantwortlichen nach Bereichen</li>
+        <li>Erinnerungskette: Reagiert niemand, geht die Nachricht an die Führungskraft</li>
+        <li>Lagerzu- und -abgänge direkt im Bot</li>
+      </ul>
+      <div class="sub">Für die meisten Unternehmen reicht das.</div>
+    </div>
+
+    <div class="pack">
+      <h3>Maximum</h3>
+      <div class="for">Die Geschäftsleitung stellt eine Frage in eigenen Worten und erhält sofort eine Antwort</div>
+      <div class="cost">Preis auf Anfrage<small>einen Richtwert in Euro senden wir innerhalb von 1 Arbeitstag nach dem Gespräch</small></div>
+      <ul>
+        <li>Alles aus dem Paket „Optimal“</li>
+        <li>KI-Assistent: Fragen in einfacher Sprache, zum Beispiel „Was brennt diese Woche?“</li>
+        <li>Lesen eingehender E-Mails: erkennt Anforderungen und Fristen, schlägt eine Aufgabe vor, ein Mitarbeiter bestätigt</li>
+        <li>Wöchentliche Prozessanalyse: was bremst und wo sich Fristüberschreitungen wiederholen (nach Prozessen, nicht nach Personen)</li>
+      </ul>
+      <div class="sub">Erfordert die Wahl eines KI-Dienstes und eine Entscheidung zu personenbezogenen Daten (Abschnitt unten).</div>
+    </div>
+
+  </div>
+  <div class="note">Der Preis wird individuell vereinbart und hängt von Leistungsumfang und Volumen ab. Einen Richtwert in Euro, als Festbetrag je Phase, senden wir innerhalb von 1 Arbeitstag nach einem 30-minütigen Gespräch, sobald klar ist, wo das Lager geführt wird, wie viele Postfächer und wie viele Länder es gibt. Einen finanziellen Effekt versprechen wir nicht im Voraus: Nach der ersten Phase messen wir, wie viel Zeit frei geworden ist, und zeigen Ihnen die Zahlen.</div>
+</section>
+
+<section>
+  <div class="eyebrow">Projektphasen</div>
+  <h2>Erstes Ergebnis zwei Wochen nach Erhalt der Zugänge</h2>
+  <div class="steps">
+    <div class="step"><div class="when">WOCHEN 1–2</div><h3>Phase 1. Ausschreibungen</h3>
+      <p>Suche nach Ihrem Profil, Erinnerungen an Abgabefristen, erste Version der Inhaberseite (Zuweisung von Verantwortlichen per Schaltfläche, wenn Sie das Paket „Optimal“ wählen). Läuft auf einem dauerhaft betriebenen Server.</p>
+      <div class="bar" aria-hidden="true"><i style="left:0;width:22%"></i></div></div>
+    <div class="step"><div class="when">WOCHEN 3–5</div><h3>Phase 2. Fristen</h3>
+      <p>Register für Zertifikate, Registrierungen und Verträge, Erinnerungen, Einbeziehung der Führungskraft bei Fristüberschreitung.</p>
+      <div class="bar" aria-hidden="true"><i style="left:22%;width:34%"></i></div></div>
+    <div class="step"><div class="when">WOCHEN 6–9</div><h3>Phase 3. Lager und vollständiger Bericht</h3>
+      <p>Bestände, Mindestmengen, Bestellungen bei Lieferanten. Lager und Fristen erscheinen im Bericht für den Inhaber.</p>
+      <div class="bar" aria-hidden="true"><i style="left:56%;width:44%"></i></div></div>
+  </div>
+  <p class="small">Der KI-Assistent des Pakets „Maximum“ kommt nach der dritten Phase hinzu, weitere 2–3 Wochen.</p>
+  <div class="note">Zahlung je Phase, jeweils nach Abnahme. Höhe der Anzahlung und Zahlungsmodalitäten legen wir im Vertrag fest.</div>
+</section>
+
+
+<section>
+  <div class="eyebrow">Daten und Sicherheit</div>
+  <h2>Ihre Daten bleiben Ihre Daten</h2>
+  <div class="two">
+    <div class="box"><h3>So ist es geregelt, wir halten es im Vertrag fest</h3><ul>
+      <li>Rollenbasierter Zugriff: Mitarbeiter sehen nur ihre eigenen Aufgaben, der Inhaber sieht alles</li>
+      <li>Das System liest nur die Postfächer und Tabellen, die Sie ausgewählt haben</li>
+      <li>KI schlägt vor, ein Mensch bestätigt. E-Mails werden nie automatisch versendet</li>
+      <li>Wir verwenden Ihre Daten nicht für Arbeiten für andere Kunden</li>
+      <li>Ihre Daten, Einstellungen und Zugänge bleiben Ihre, auch wenn Sie die Betreuung beenden. Gemeinsame Module des Studios werden unter Lizenz genutzt</li>
+    </ul></div>
+    <div class="box"><h3>Was wir vor dem Start klären</h3><ul>
+      <li>Die Daten werden auf Servern in der EU verarbeitet. Wir schließen einen Vertrag zur Auftragsverarbeitung (AVV nach Art. 28 DSGVO) und legen die Liste aller Unterauftragsverarbeiter vor, über die Daten laufen. Welcher KI-Dienst eingesetzt wird, stimmen wir vor dem Start mit Ihnen ab; für Postfächer mit personenbezogenen Daten ist ein Betrieb ohne KI möglich</li>
+      <li>Welche E-Mails und Verträge personenbezogene Daten enthalten und ob sie an die KI übergeben werden dürfen</li>
+      <li>Wo die Daten gespeichert werden: bei Ihnen oder auf einem separaten Server</li>
+      <li>Wie mit Korrespondenz umgegangen wird, die die KI nicht lesen darf</li>
+    </ul></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Was wir wissen möchten</div>
+  <h2>Sechs Fragen für den Termin</h2>
+  <div class="box"><ul>
+    <li>Wie wird das Lager heute geführt: 1C, Tabelle, Papier?</li>
+    <li>Wer verfolgt derzeit Ausschreibungen, Zertifikate und E-Mails in den einzelnen Ländern? Wünschen sich diese Mitarbeiter Unterstützung?</li>
+    <li>Welche Fristen (Zertifikate, Chargen, Verträge) wurden verpasst oder beinahe verpasst?</li>
+    <li>In welchen Ländern arbeiten Ihre Mitarbeiter, und welche Vergabeplattformen sind für Sie wichtig? Wie viele Postfächer gibt es?</li>
+    <li>Was möchte der Inhaber im Bericht zuerst sehen?</li>
+    <li>Wer ist im Unternehmen Ansprechpartner für das System und nimmt die Arbeit ab?</li>
+  </ul></div>
+</section>
+
+<section>
+  <div class="eyebrow" id="dalee">Nächster Schritt</div>
+  <h2>Beginnen wir mit einem kurzen Gespräch</h2>
+  <ol class="next">
+    <li><b>Gespräch, 30 Minuten</b>Wir klären Lager, E-Mail und Zuständigkeiten. Am nächsten Arbeitstag senden wir einen Preisrichtwert in Euro.</li>
+    <li><b>Phase 1, zwei Wochen</b>Wir binden die Ausschreibungen an. Sie sehen das Ergebnis.</li>
+    <li><b>Entscheidung</b>Wenn es Ihnen gefällt, machen wir mit Fristen und Lager weiter. Wenn nicht, behalten Sie ein funktionierendes Ausschreibungsmodul und zahlen nur für Phase 1.</li>
+  </ol>
+  <p class="lead">Antworten Sie auf diese Nachricht, und wir vereinbaren Zeit und Format des Gesprächs: Telefon, Video oder persönliches Treffen.</p>
+</section>
+
+<footer>Dastgir, KI-Studio. Dieses Angebot ist unverbindlich; die Konditionen gelten 30 Tage ab dem oben genannten Datum. Auftragnehmer und Firmendaten, Endpreis und Zahlungsmodalitäten werden im Vertrag festgelegt.</footer>
+</div>
+</body>
+</html>
