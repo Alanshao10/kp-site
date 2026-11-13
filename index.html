@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
+<meta name="robots" content="noindex,nofollow">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Система контроля бизнеса</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -181,7 +182,7 @@ footer{font-size:17px;color:var(--muted);border-top:1px solid var(--line);paddin
 
 <div class="wrap">
 
-<p class="lead" style="font-size:19px">Дальше на странице: <a href="#pakety">три пакета и цены</a> · <a href="#kak">как это устроено</a> · <a href="#dalee">следующий шаг</a></p>
+<p class="lead" style="font-size:19px">Дальше на странице: <a href="#pakety">три пакета</a> · <a href="#kak">как это устроено</a> · <a href="#dalee">следующий шаг</a></p>
 
 <section id="dash">
   <div class="eyebrow">Так выглядит результат</div>
@@ -198,7 +199,7 @@ footer{font-size:17px;color:var(--muted);border-top:1px solid var(--line);paddin
           <div><b>4</b><small>срока на этой неделе</small></div>
         </div>
         <div class="dash-cols">
-          <div class="row hot"><div class="t"><b>Тендеры</b><span class="pill warn">4 раб. дня</span></div><span class="small">Поставка ферментов и заквасок для молочного комбината, 38 000 €. Подача через 4 раб. дня. Ответственный: менеджер по закупкам</span></div>
+          <div class="row hot"><div class="t"><b>Тендеры</b><span class="pill warn">4 раб. дня</span></div><span class="small">Поставка ферментов и заквасок для молочного комбината, 38 000 €. Подача через 4 раб. дня. Ответственный: менеджер по тендерам</span></div>
           <div class="row"><div class="t"><b>Склад</b><span class="pill bad">нужен заказ</span></div><span class="small">Дрожжи винные, партия 2411: 12 кг, срок до 30.11, использовать первой. Стабилизатор: 40 из 150 кг, нужен заказ</span></div>
           <div class="row"><div class="t"><b>Сроки</b><span class="pill warn">01.12</span></div><span class="small">Сертификат на моющие средства (Узбекистан) истекает 01.12. Ответственный: офис Ташкент</span></div>
         </div>
@@ -281,7 +282,7 @@ footer{font-size:17px;color:var(--muted);border-top:1px solid var(--line);paddin
       <div class="phone" aria-label="Пример: утренняя сводка закупок">
         <div class="ph-head"><span>Закупки · 08:30</span><a>Все 6 →</a></div>
         <div class="big">6<small>новых по вашему профилю</small></div>
-        <div class="row hot"><div class="t"><b>38 000 €</b><span class="pill warn">4 раб. дня</span></div>Ферменты и закваски для молочного комбината<span class="small">ответственный: менеджер по закупкам</span></div>
+        <div class="row hot"><div class="t"><b>38 000 €</b><span class="pill warn">4 раб. дня</span></div>Ферменты и закваски для молочного комбината<span class="small">ответственный: менеджер по тендерам</span></div>
         <div class="row"><div class="t"><b>12 400 €</b><span class="pill warn">5 раб. дн.</span></div>Поставка моющих средств для пивоварни</div>
         <div class="btns"><span class="btn main">Беру № 1</span><span class="btn">Пропустить</span></div>
       </div>
@@ -292,7 +293,7 @@ footer{font-size:17px;color:var(--muted);border-top:1px solid var(--line);paddin
     <div class="phone-box">
       <div class="phone" aria-label="Пример: напоминание о сроке">
         <div class="ph-head"><span>Срок · 09:00</span><u>Для: офис Ташкент</u></div>
-        <div class="big" style="color:var(--bad)">1 раб. день<small>до конца срока сертификата</small></div>
+        <div class="big" style="color:var(--bad)">1 раб. день<small>до срока подачи на продление</small></div>
         <div class="row hot"><b>Продлить сертификат на моющие средства</b>Узбекистан, разрешение на ввоз<span class="small">срок: пн, 16.11</span></div>
         <div class="row"><b>Что нужно сделать</b><span class="small">Документы и ссылка — по кнопке. Отметьте, когда заявка на продление подана.</span></div>
         <div class="btns"><span class="btn main">Сделано</span><span class="btn">Перенести</span><span class="btn">Передать</span></div>
@@ -323,7 +324,7 @@ footer{font-size:17px;color:var(--muted);border-top:1px solid var(--line);paddin
         <li>Сроки годности партий: сообщает за 60 и 30 дней, что нужно продать или использовать в первую очередь</li>
         <li>Сообщает, когда позиция опустилась ниже минимума</li>
         <li>Готовит черновик заявки поставщику, отправка по вашей команде</li>
-        <li>Если учёт в 1С, цену уточним после осмотра базы</li>
+        <li>Если учёт в SAP, 1C-подобной системе или Excel, цену уточним после осмотра базы</li>
       </ul></div>
     <div class="mod"><div class="mod-head"><span class="no">03</span><h3>Сроки и письма</h3></div>
       <ul>
@@ -387,7 +388,7 @@ footer{font-size:17px;color:var(--muted);border-top:1px solid var(--line);paddin
     </div>
 
   </div>
-  <div class="note">Цена договорная и зависит от состава работ и объёма. Ориентир в евро, фиксированной суммой за этап, пришлём в течение 1 рабочего дня после 30-минутного разговора, когда будет понятно, где ведётся склад, сколько ящиков почты и сколько стран. Эффект в деньгах мы не обещаем заранее: после первого этапа замерим, сколько времени освободилось, и покажем цифры.</div>
+  <div class="note">Цена договорная и зависит от состава работ и объёма. Ориентир в евро, фиксированной суммой за этап, пришлём в течение 1 рабочего дня после 30-минутного разговора, когда будет понятно, где ведётся склад, сколько ящиков почты и сколько стран. Помимо разовой оплаты за этапы предусмотрена ежемесячная плата за работу сервера, обновления, резервные копии и поддержку. Эффект в деньгах мы не обещаем заранее: после первого этапа замерим, сколько времени освободилось, и покажем цифры.</div>
 </section>
 
 <section>
@@ -405,7 +406,7 @@ footer{font-size:17px;color:var(--muted);border-top:1px solid var(--line);paddin
       <div class="bar" aria-hidden="true"><i style="left:56%;width:44%"></i></div></div>
   </div>
   <p class="small">ИИ-помощник пакета «Максимальный» подключается после третьего этапа, ещё 2–3 недели.</p>
-  <div class="note">Оплата по этапам, после приёмки каждого. Размер аванса и порядок оплаты зафиксируем в договоре.</div>
+  <div class="note">Оплата по этапам, после приёмки каждого. Условия оплаты, включая возможный аванс, зафиксируем в договоре.</div>
 </section>
 
 
@@ -421,7 +422,7 @@ footer{font-size:17px;color:var(--muted);border-top:1px solid var(--line);paddin
       <li>Ваши данные, настройки и доступы остаются вашими, в том числе если вы откажетесь от сопровождения. Общие модули студии используются по лицензии</li>
     </ul></div>
     <div class="box"><h3>Что обсудим до начала</h3><ul>
-      <li>Данные обрабатываются на серверах в ЕС. Заключим договор об обработке данных (AVV по ст. 28 DSGVO) и покажем список всех подрядчиков, через которых проходят данные. Какой ИИ-сервис использовать, согласуем с вами до запуска; для ящиков с персональными данными возможна работа без ИИ</li>
+      <li>Данные размещаем на сервере в ЕС; при любой передаче за пределы ЕС применяем стандартные договорные условия ЕС (SCC). Заключим договор об обработке данных (AVV по ст. 28 DSGVO) и покажем список всех подрядчиков, через которых проходят данные. Какой ИИ-сервис использовать, согласуем с вами до запуска; для ящиков с персональными данными возможна работа без ИИ</li>
       <li>Какие письма и договоры содержат персональные данные и можно ли передавать их ИИ</li>
       <li>Где хранить данные: у вас или на отдельном сервере</li>
       <li>Что делать с перепиской, которую ИИ читать не должен</li>
@@ -433,7 +434,7 @@ footer{font-size:17px;color:var(--muted);border-top:1px solid var(--line);paddin
   <div class="eyebrow">Что мы хотим узнать</div>
   <h2>Шесть вопросов к встрече</h2>
   <div class="box"><ul>
-    <li>Как сейчас ведётся склад: 1С, таблица, бумага?</li>
+    <li>Как сейчас ведётся склад: SAP, Excel, другая программа или бумага?</li>
     <li>Кто сейчас следит за закупками, сертификатами и письмами в каждой стране? Хотят ли они, чтобы им помогли?</li>
     <li>Какие сроки (сертификаты, партии, договоры) пропускались или чуть не пропустились?</li>
     <li>В каких странах работают сотрудники и какие площадки закупок вам важны? Сколько ящиков почты?</li>
