@@ -248,6 +248,27 @@ footer{font-size:17px;color:var(--muted);border-top:1px solid var(--line);paddin
   </div>
 </section>
 
+<style>
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;counter-reset:h}
+.how div.st{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 16px;position:relative}
+.how div.st:before{counter-increment:h;content:counter(h);display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font:700 18px var(--display);margin-bottom:10px}
+.how b{display:block;font-size:20px;margin-bottom:4px}
+.how span{font-size:17px;color:var(--muted)}
+.how .ai{border-color:var(--signal);background:var(--signal-soft)}
+.how-note{margin-top:14px;font-size:18px;color:var(--muted)}
+</style>
+<section id="skhema">
+  <div class="eyebrow">Схема работы</div>
+  <h2>Как это работает: четыре шага, ИИ только там, где он нужен</h2>
+  <div class="how">
+    <div class="st"><b>Забираем данные</b><span>По расписанию, 1–2 раза в день: площадки закупок, ваша таблица или программа склада, реестр сроков и сертификатов.</span></div>
+    <div class="st"><b>Храним в одном месте</b><span>На защищённом сервере студии, данные только ваши, доступ по ролям.</span></div>
+    <div class="st"><b>Показываем</b><span>Страница-дашборд для руководителя, сообщения и кнопки для сотрудников в Telegram или на e-mail.</span></div>
+    <div class="st ai"><b>ИИ-помощник (пакет «Максимальный»)</b><span>Отвечает на вопросы простыми словами, находит сроки в письмах. Решение всегда подтверждает человек.</span></div>
+  </div>
+  <p class="how-note">В пакетах «Базовый» и «Оптимальный» всё работает без ИИ: это обычная проверенная автоматика. Ежемесячная плата покрывает работу сервера, обновления, резервные копии и поддержку.</p>
+</section>
+
 <section>
   <div class="eyebrow">Как это выглядит</div>
   <h2>Сообщения сотрудников</h2>
