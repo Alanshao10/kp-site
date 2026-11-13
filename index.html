@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Система контроля бизнеса</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* Идея: деловая бумага «паспорт объекта» — сетка, крупные цифры сроков, телефонные карточки как главные иллюстрации */
+:root{
+  --bg:#f3f6f4;--card:#ffffff;--ink:#14211f;--muted:#46585a;--line:#d3dedb;
+  --accent:#0d5c63;--accent-ink:#ffffff;--soft:#e2efee;
+  --signal:#f2a31b;--signal-text:#8a4b00;--signal-soft:#fdf1d9;
+  --ok:#1f7a45;--ok-soft:#e2f2e8;--bad:#b3261e;--bad-soft:#fbe7e4;
+  --display:"Unbounded","Onest",system-ui,sans-serif;
+  --body:"Onest",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1818;--card:#152425;--ink:#e8f1ef;--muted:#a8bcba;--line:#2a4041;
+    --accent:#58c2c7;--accent-ink:#06201f;--soft:#1a3335;
+    --signal:#f5b041;--signal-text:#f5c26b;--signal-soft:#33280f;
+    --ok:#6fd199;--ok-soft:#163626;--bad:#ff9a90;--bad-soft:#3b1a17;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1818;--card:#152425;--ink:#e8f1ef;--muted:#a8bcba;--line:#2a4041;
+  --accent:#58c2c7;--accent-ink:#06201f;--soft:#1a3335;
+  --signal:#f5b041;--signal-text:#f5c26b;--signal-soft:#33280f;
+  --ok:#6fd199;--ok-soft:#163626;--bad:#ff9a90;--bad-soft:#3b1a17;color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 20px/1.6 var(--body)}
+.wrap{max-width:1000px;margin:0 auto;padding:0 18px 90px;display:flex;flex-direction:column;gap:64px}
+h1,h2,h3{text-wrap:balance;margin:0}
+h1{font:700 clamp(28px,5.4vw,46px)/1.2 var(--display);letter-spacing:-.01em}
+h2{font:700 clamp(24px,3.6vw,32px)/1.25 var(--display);letter-spacing:-.01em}
+h3{font:700 24px/1.3 var(--body)}
+p{margin:0}
+a{color:var(--accent)}
+ul{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+section{display:flex;flex-direction:column;gap:24px}
+.eyebrow{font-size:16px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lead{font-size:22px;color:var(--muted);max-width:62ch}
+.small{font-size:17px;color:var(--muted)}
+
+/* шапка */
+.top{background:var(--accent);color:var(--accent-ink);margin:0 0 64px;padding:34px 18px 40px}
+.top-in{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.brand{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:17px;font-weight:600;letter-spacing:.04em}
+.brand b{font:700 20px var(--display);letter-spacing:0}
+.top .lead{color:inherit;opacity:.92}
+.stripe{height:8px;border-radius:4px;background:repeating-linear-gradient(135deg,var(--signal) 0 18px,transparent 18px 36px);opacity:.95}
+.who{display:flex;gap:10px;flex-wrap:wrap;font-size:17px}
+.who span{background:rgba(255,255,255,.14);border-radius:6px;padding:6px 12px}
+
+/* ваш запрос */
+.ask{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.ask div{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:8px}
+.ask i{font:700 15px var(--display);font-style:normal;color:var(--signal-text)}
+.ask b{font-size:21px;line-height:1.3}
+.ask span{font-size:17px;color:var(--muted)}
+
+/* схема */
+.flow{display:grid;grid-template-columns:1fr 44px 1fr 44px 1fr;align-items:stretch;gap:0}
+.col{display:flex;flex-direction:column;gap:12px}
+.col h4{margin:0;font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.node{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-size:18px;line-height:1.4}
+.node b{display:block;font-size:19px}
+.node.core{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);flex:1;justify-content:center;display:flex;flex-direction:column;gap:6px}
+.node.core ul{font-size:18px;gap:4px}
+.node.owner{border:2px solid var(--signal)}
+.arr{display:flex;align-items:center;justify-content:center;font-size:30px;color:var(--signal-text);font-weight:700}
+@media(max-width:760px){
+  .flow{grid-template-columns:1fr}
+  .arr{transform:rotate(90deg);height:38px}
+}
+
+/* телефоны */
+.phones{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:26px;align-items:start}
+.phone-box{display:flex;flex-direction:column;gap:12px}
+.phone-box .cap{font-size:18px;color:var(--muted)}
+.phone-box .cap b{color:var(--ink)}
+.phone{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:20px 18px;display:flex;flex-direction:column;gap:12px;box-shadow:0 10px 30px rgba(10,40,40,.08);max-width:360px;width:100%}
+.ph-head{display:flex;justify-content:space-between;gap:8px;font-size:16px;color:var(--muted)}
+.ph-head a,.ph-head u{color:var(--accent);font-weight:600;text-decoration:none}
+.big{font:700 44px/1 var(--display)}
+.big small{font:500 17px/1.3 var(--body);color:var(--muted);display:block;margin-top:6px}
+.row{background:var(--soft);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:18px;line-height:1.35}
+.row.hot{border:2px solid var(--accent)}
+.row .t{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.row .t b{font-size:19px}
+.pill{font-size:15px;font-weight:700;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.warn{background:var(--signal-soft);color:var(--signal-text)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.btn{flex:1;min-width:110px;text-align:center;border-radius:12px;padding:12px 10px;font-size:17px;font-weight:700;background:var(--soft);color:var(--accent)}
+.btn.main{background:var(--accent);color:var(--accent-ink)}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.mini div{background:var(--soft);border-radius:12px;padding:10px;text-align:center}
+.mini b{display:block;font:700 26px/1.1 var(--display)}
+.mini small{font-size:14px;color:var(--muted);line-height:1.2;display:block;margin-top:4px}
+.example{font-size:15px;color:var(--signal-text);font-weight:600}
+
+/* дашборд */
+.dash{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(10,40,40,.08)}
+.dash-bar{display:flex;gap:7px;align-items:center;padding:12px 16px;background:var(--soft);font-size:15px;color:var(--muted);flex-wrap:wrap}
+.dash-bar i{width:11px;height:11px;border-radius:50%;background:var(--line);display:block}
+.dash-bar span{margin-left:8px}
+.dash-body{padding:18px;display:flex;flex-direction:column;gap:14px}
+.mini4{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.mini4 div{background:var(--soft);border-radius:12px;padding:12px;text-align:center}
+.mini4 b{display:block;font:700 34px/1.1 var(--display)}
+.mini4 b.r{color:var(--bad)}
+.mini4 small{font-size:15px;color:var(--muted);line-height:1.25;display:block;margin-top:4px}
+.dash-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+/* пакеты */
+.pk{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;align-items:stretch}
+.pack{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:14px;position:relative}
+.pack.rec{border:3px solid var(--signal)}
+.pack .tag{position:absolute;top:-15px;left:20px;background:var(--signal);color:#1c1300;font-size:15px;font-weight:700;padding:3px 12px;border-radius:999px}
+.pack .for{font-size:17px;color:var(--muted)}
+.pack .cost{font:700 28px/1.2 var(--display)}
+.pack .cost small{display:block;font:500 17px var(--body);color:var(--muted);margin-top:4px}
+.pack ul{font-size:18px}
+.pack .sub{border-top:1px solid var(--line);padding-top:12px;font-size:17px;color:var(--muted)}
+/* модули */
+.mod{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px;display:flex;flex-direction:column;gap:18px;border-top:8px solid var(--accent)}
+.mod-head{display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+.mod-head .no{font:700 16px var(--display);color:var(--signal-text);background:var(--signal-soft);border-radius:8px;padding:6px 10px}
+.mod .status{margin-left:auto}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:22px}
+.cols h5{margin:0 0 8px;font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.price-line{display:flex;gap:24px;flex-wrap:wrap;align-items:baseline;border-top:1px solid var(--line);padding-top:16px}
+.price-line b{font:700 26px var(--display)}
+.price-line span{font-size:17px;color:var(--muted)}
+
+/* этапы */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.step .when{font:700 15px var(--display);color:var(--accent)}
+.bar{height:10px;border-radius:5px;background:var(--soft);position:relative;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;border-radius:5px;background:var(--signal)}
+
+/* цены */
+.tbl{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:18px;min-width:560px}
+th,td{text-align:left;padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+td.n,th.n{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+tr.total td{font-weight:700;font-size:20px;background:var(--soft);border-bottom:0}
+.note{background:var(--signal-soft);border-radius:10px;padding:16px 18px;font-size:18px;border-left:6px solid var(--signal)}
+
+/* вопросы / безопасность */
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:12px}
+.next{counter-reset:n;list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.next li{counter-increment:n;background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:20px 20px 20px 70px;position:relative}
+.next li:before{content:counter(n);position:absolute;left:18px;top:16px;width:38px;height:38px;border-radius:50%;background:var(--signal);color:#1c1300;font:700 18px/38px var(--display);text-align:center}
+.next b{display:block;font-size:21px}
+footer{font-size:17px;color:var(--muted);border-top:1px solid var(--line);padding-top:18px}
+:focus-visible{outline:3px solid var(--signal);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><b>Дастгир</b><span>ИИ-студия · коммерческое предложение · 14 ноября 2026</span></div>
+    <div class="stripe" aria-hidden="true"></div>
+    <h1>Тендеры, склад и сроки под контролем. Отчёт собственнику в любой момент</h1>
+    <p class="lead">Одна система, которая ищет закупки, следит за остатками партий, сроками годности, сертификатами и договорами, вовремя напоминает ответственным и показывает собственнику всю картину по всем странам. Партии с истекающим сроком видны заранее: их успевают продать, а не списать.</p>
+    <div class="who"><span>Для: Anax Group</span><span>Основа: наш тендерный модуль. Покажем вживую на встрече</span></div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<p class="lead" style="font-size:19px">Дальше на странице: <a href="#pakety">три пакета и цены</a> · <a href="#kak">как это устроено</a> · <a href="#dalee">следующий шаг</a></p>
+
+<section id="dash">
+  <div class="eyebrow">Так выглядит результат</div>
+  <h2>Страница собственника: всё важное на одном экране</h2>
+  <p class="small">Все примеры на странице условные: подставим ваши данные.</p>
+  <div class="phone-box">
+    <div class="dash" aria-label="Пример: страница-дашборд">
+      <div class="dash-bar"><i></i><i></i><i></i><span>Контроль · сегодня, 15:20 · обновлено 2 минуты назад</span></div>
+      <div class="dash-body">
+        <div class="mini4">
+          <div><b>6</b><small>новых закупок</small></div>
+          <div><b class="r">3</b><small>позиции склада ниже минимума</small></div>
+          <div><b class="r">1</b><small>просроченный срок</small></div>
+          <div><b>4</b><small>срока на этой неделе</small></div>
+        </div>
+        <div class="dash-cols">
+          <div class="row hot"><div class="t"><b>Тендеры</b><span class="pill bad">подача сегодня</span></div><span class="small">Поставка ферментов и заквасок для молочного комбината, 38 000 €. Подача через 4 раб. дня. Ответственный: менеджер по закупкам</span></div>
+          <div class="row"><div class="t"><b>Склад</b><span class="pill bad">нужен заказ</span></div><span class="small">Дрожжи винные, партия 2411: 12 кг, срок до 30.11, использовать первой. Стабилизатор: 40 из 150 кг, нужен заказ</span></div>
+          <div class="row"><div class="t"><b>Сроки</b><span class="pill warn">01.12</span></div><span class="small">Сертификат на моющие средства (Узбекистан) истекает 01.12. Ответственный: офис Ташкент</span></div>
+        </div>
+      </div>
+    </div>
+    <p class="cap"><b>Дашборд.</b> Открывается с телефона и компьютера. Обновляется сам, а когда появляется важное, приходит сообщение со ссылкой.</p>
+    <span class="example">Пример, данные условные</span>
+  </div>
+
+</section>
+
+<section>
+  <div class="eyebrow">Ваш запрос</div>
+  <h2>Четыре задачи, которые вы поставили</h2>
+  <div class="ask">
+    <div><i>01</i><b>Находить закупки и тендеры</b><span>и сообщать ответственным</span></div>
+    <div><i>02</i><b>Контролировать склад</b><span>остатки, приход, расход</span></div>
+    <div><i>03</i><b>Следить за дедлайнами</b><span>договоры, сертификаты и регистрации продукции, разрешения по странам</span></div>
+    <div><i>04</i><b>Отчёт собственнику</b><span>в любой момент, по требованию</span></div>
+  </div>
+  <p class="lead">Для поставщика ингредиентов деньги теряются на списании просроченных партий и на остановке поставок из-за истёкшего сертификата. Мы собираем ваши задачи в одну систему, а не в четыре отдельные программы. Собственник открывает страницу и видит, что произошло. Сотрудник получает сообщение, нажимает кнопку, и дело либо закрыто, либо передано дальше.</p>
+</section>
+
+<section>
+  <div class="eyebrow" id="kak">Как это устроено</div>
+  <h2>Данные идут в одну точку, люди получают только своё</h2>
+  <div class="flow" role="img" aria-label="Схема: источники данных, система Дастгир, люди в Telegram">
+    <div class="col">
+      <h4>Откуда берём</h4>
+      <div class="node"><b>Площадки закупок ваших стран</b>например TED (ЕС), Prozorro (Украина), закупочные порталы Грузии и Узбекистана и другие по вашему списку; доступность данных проверим до начала</div>
+      <div class="node"><b>Склад</b>ваша программа учёта или таблица; если учёта нет — приход и расход в боте (пакет «Оптимальный»)</div>
+      <div class="node"><b>Договоры, сертификаты, письма</b>реестр сроков, рабочая почта</div>
+    </div>
+    <div class="arr" aria-hidden="true">→</div>
+    <div class="col">
+      <h4>Что делаем</h4>
+      <div class="node core"><b>Система контроля</b>
+        <ul><li>находит и отбирает</li><li>считает остатки и сроки</li><li>назначает ответственного</li><li>напоминает чаще и подключает руководителя</li></ul>
+      </div>
+    </div>
+    <div class="arr" aria-hidden="true">→</div>
+    <div class="col">
+      <h4>Кто получает</h4>
+      <div class="node"><b>Ответственные</b>сообщение в Telegram или на e-mail (канал выбираете вы), а в пакетах «Оптимальный» и «Максимальный» ещё и кнопки «Беру», «Сделано», «Передать»</div>
+      <div class="node"><b>Руководитель</b>видит то, что просрочено или никем не взято</div>
+      <div class="node owner"><b>Собственник</b>страница-дашборд, которая обновляется сама, и оповещение, когда в ней появилось важное</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Как это выглядит</div>
+  <h2>Сообщения сотрудников</h2>
+  <p class="small">Ниже примеры сообщений. Данные в них условные.</p>
+
+  <div class="phones">
+
+    <div class="phone-box">
+      <div class="phone" aria-label="Пример: утренняя сводка закупок">
+        <div class="ph-head"><span>Закупки · 08:30</span><a>Все 6 →</a></div>
+        <div class="big">6<small>новых по вашему профилю</small></div>
+        <div class="row hot"><div class="t"><b>38 000 €</b><span class="pill bad">подача сегодня</span></div>Ферменты и закваски для молочного комбината<span class="small">ответственный: менеджер по закупкам</span></div>
+        <div class="row"><div class="t"><b>12 400 €</b><span class="pill warn">5 раб. дн.</span></div>Поставка моющих средств для пивоварни</div>
+        <div class="btns"><span class="btn main">Беру № 1</span><span class="btn">Пропустить</span></div>
+      </div>
+      <p class="cap"><b>Тендеры.</b> Такая сводка приходит каждое утро. Настроим её под ваш профиль, добавим назначение ответственного и напоминание о сроке подачи.</p>
+      <span class="example">Пример, данные условные</span>
+    </div>
+
+    <div class="phone-box">
+      <div class="phone" aria-label="Пример: напоминание о сроке">
+        <div class="ph-head"><span>Срок · 09:00</span><u>Для: офис Ташкент</u></div>
+        <div class="big" style="color:var(--bad)">1 раб. день<small>до конца срока сертификата</small></div>
+        <div class="row hot"><b>Продлить сертификат на моющие средства</b>Узбекистан, разрешение на ввоз<span class="small">срок: пн, 16.11</span></div>
+        <div class="row"><b>Что нужно сделать</b><span class="small">Документы и ссылка — по кнопке. Отметьте, когда заявка на продление подана.</span></div>
+        <div class="btns"><span class="btn main">Сделано</span><span class="btn">Перенести</span><span class="btn">Передать</span></div>
+      </div>
+      <p class="cap"><b>Сроки.</b> Напоминание приходит за 14, 7, 3 и 1 календарный день. Если ответа нет, сообщение уходит руководителю.</p>
+      <span class="example">Пример, данные условные</span>
+    </div>
+
+
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Что система контролирует</div>
+  <h2>Четыре направления из вашего запроса</h2>
+  <div class="cols" style="grid-template-columns:repeat(auto-fit,minmax(300px,1fr))">
+    <div class="mod"><div class="mod-head"><span class="no">01</span><h3>Тендеры</h3></div>
+      <ul>
+        <li>Каждое утро ищет закупки по вашему профилю: ключевые слова, регионы, минимальная сумма</li>
+        <li>Отбирает подходящие, показывает цену и срок подачи</li>
+        <li>Назначает ответственного и напоминает о сроке подачи за 3 и 1 рабочий день</li>
+        <li>Площадки подключаем по вашему списку стран, платные тарифы площадок оплачиваете вы</li>
+      </ul></div>
+    <div class="mod"><div class="mod-head"><span class="no">02</span><h3>Склад</h3></div>
+      <ul>
+        <li>Остатки по ингредиентам, культурам, ферментам, моющим средствам</li>
+        <li>Приход и расход вносятся таблицей, из вашей программы учёта или в два нажатия в боте (пакет «Оптимальный»)</li>
+        <li>Сроки годности партий: сообщает за 60 и 30 дней, что нужно продать или использовать в первую очередь</li>
+        <li>Сообщает, когда позиция опустилась ниже минимума</li>
+        <li>Готовит черновик заявки поставщику, отправка по вашей команде</li>
+        <li>Если учёт в 1С, цену уточним после осмотра базы</li>
+      </ul></div>
+    <div class="mod"><div class="mod-head"><span class="no">03</span><h3>Сроки и письма</h3></div>
+      <ul>
+        <li>Реестр сроков: сертификаты и регистрации продукции по странам, разрешения, окончание договоров, оплата</li>
+        <li>Напоминает за 14, 7, 3 и 1 календарный день, при просрочке подключает руководителя</li>
+        <li>Чтение входящих писем и поиск в них сроков доступен в пакете «Максимальный»: ИИ может пропустить письмо, поэтому главным остаётся реестр, а почта служит страховкой</li>
+      </ul></div>
+    <div class="mod"><div class="mod-head"><span class="no">04</span><h3>Отчёт собственнику</h3></div>
+      <ul>
+        <li>Всё по трём направлениям в одном месте: что в работе, что зависло, что просрочено и у кого</li>
+        <li>В любой момент, без звонков сотрудникам и таблиц</li>
+        <li>PDF для печати или пересылки</li>
+      </ul></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow" id="pakety">Три способа получить</div>
+  <h2>Выберите пакет: от «видеть картину» до «управлять делами»</h2>
+  <div class="pk">
+
+    <div class="pack">
+      <h3>Базовый</h3>
+      <div class="for">Собственнику важно видеть картину и не пропускать главное</div>
+      <div class="cost">Цена договорная<small>ориентир в евро пришлём в течение 1 рабочего дня после разговора</small></div>
+      <ul>
+        <li>Страница-дашборд с тендерами, складом и сроками</li>
+        <li>Обновляется сама по расписанию</li>
+        <li>Оповещение в Telegram со ссылкой, когда в ней появилось важное</li>
+        <li>Отчёт и PDF в любой момент</li>
+      </ul>
+      <div class="sub">Сотрудники получают оповещения, но кнопок и передачи задач нет.</div>
+    </div>
+
+    <div class="pack rec">
+      <span class="tag">Рекомендуем</span>
+      <h3>Оптимальный</h3>
+      <div class="for">Нужно, чтобы дела не терялись между сотрудниками</div>
+      <div class="cost">Цена договорная<small>ориентир в евро пришлём в течение 1 рабочего дня после разговора</small></div>
+      <ul>
+        <li>Всё из пакета «Базовый»</li>
+        <li>Бот в Telegram для сотрудников: «Беру», «Сделано», «Перенести», «Передать»</li>
+        <li>Назначение ответственных по направлениям</li>
+        <li>Цепочка напоминаний: если никто не отозвался, сообщение уходит руководителю</li>
+        <li>Приход и расход на складе прямо в боте</li>
+      </ul>
+      <div class="sub">Для большинства компаний этого достаточно.</div>
+    </div>
+
+    <div class="pack">
+      <h3>Максимальный</h3>
+      <div class="for">Руководитель задаёт вопрос словами и сразу получает ответ</div>
+      <div class="cost">Цена договорная<small>ориентир в евро пришлём в течение 1 рабочего дня после разговора</small></div>
+      <ul>
+        <li>Всё из пакета «Оптимальный»</li>
+        <li>ИИ-помощник: вопросы простыми словами, например «что горит на этой неделе?»</li>
+        <li>Чтение входящих писем: находит требования и сроки, предлагает задачу, сотрудник подтверждает</li>
+        <li>Еженедельный разбор процессов: что тормозит и где повторяются просрочки (по процессам, не по людям)</li>
+      </ul>
+      <div class="sub">Нужен выбор ИИ-сервиса и решение по персональным данным (раздел ниже).</div>
+    </div>
+
+  </div>
+  <div class="note">Цена договорная и зависит от состава работ и объёма. Ориентир в евро, фиксированной суммой за этап, пришлём в течение 1 рабочего дня после 30-минутного разговора, когда будет понятно, где ведётся склад, сколько ящиков почты и сколько стран. Эффект в деньгах мы не обещаем заранее: после первого этапа замерим, сколько времени освободилось, и покажем цифры.</div>
+</section>
+
+<section>
+  <div class="eyebrow">Порядок работ</div>
+  <h2>Первый результат через две недели после получения доступов</h2>
+  <div class="steps">
+    <div class="step"><div class="when">НЕДЕЛИ 1–2</div><h3>Этап 1. Тендеры</h3>
+      <p>Поиск по вашему профилю, напоминания о сроках подачи, первая версия страницы собственника (назначение ответственных кнопками, если выбран пакет «Оптимальный»). Работает на постоянном сервере.</p>
+      <div class="bar" aria-hidden="true"><i style="left:0;width:22%"></i></div></div>
+    <div class="step"><div class="when">НЕДЕЛИ 3–5</div><h3>Этап 2. Сроки</h3>
+      <p>Реестр сертификатов, регистраций и договоров, напоминания, подключение руководителя при просрочке.</p>
+      <div class="bar" aria-hidden="true"><i style="left:22%;width:34%"></i></div></div>
+    <div class="step"><div class="when">НЕДЕЛИ 6–9</div><h3>Этап 3. Склад и полный отчёт</h3>
+      <p>Остатки, минимумы, заявки поставщикам. Склад и сроки появляются в отчёте собственника.</p>
+      <div class="bar" aria-hidden="true"><i style="left:56%;width:44%"></i></div></div>
+  </div>
+  <p class="small">ИИ-помощник пакета «Максимальный» подключается после третьего этапа, ещё 2–3 недели.</p>
+  <div class="note">Оплата по этапам, после приёмки каждого. Размер аванса и порядок оплаты зафиксируем в договоре.</div>
+</section>
+
+
+<section>
+  <div class="eyebrow">Данные и безопасность</div>
+  <h2>Ваши данные остаются вашими</h2>
+  <div class="two">
+    <div class="box"><h3>Как устроено, закрепим в договоре</h3><ul>
+      <li>Доступ по ролям: сотрудник видит только своё, собственник видит всё</li>
+      <li>Система читает только те ящики и таблицы, которые вы выбрали</li>
+      <li>ИИ предлагает, человек подтверждает. Письма сами не отправляются</li>
+      <li>Мы не используем ваши данные в работе для других заказчиков</li>
+      <li>Ваши данные, настройки и доступы остаются вашими, в том числе если вы откажетесь от сопровождения. Общие модули студии используются по лицензии</li>
+    </ul></div>
+    <div class="box"><h3>Что обсудим до начала</h3><ul>
+      <li>Данные обрабатываются на серверах в ЕС. Заключим договор об обработке данных (AVV по ст. 28 DSGVO) и покажем список всех подрядчиков, через которых проходят данные. Какой ИИ-сервис использовать, согласуем с вами до запуска; для ящиков с персональными данными возможна работа без ИИ</li>
+      <li>Какие письма и договоры содержат персональные данные и можно ли передавать их ИИ</li>
+      <li>Где хранить данные: у вас или на отдельном сервере</li>
+      <li>Что делать с перепиской, которую ИИ читать не должен</li>
+    </ul></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Что мы хотим узнать</div>
+  <h2>Шесть вопросов к встрече</h2>
+  <div class="box"><ul>
+    <li>Как сейчас ведётся склад: 1С, таблица, бумага?</li>
+    <li>Кто сейчас следит за закупками, сертификатами и письмами в каждой стране? Хотят ли они, чтобы им помогли?</li>
+    <li>Какие сроки (сертификаты, партии, договоры) пропускались или чуть не пропустились?</li>
+    <li>В каких странах работают сотрудники и какие площадки закупок вам важны? Сколько ящиков почты?</li>
+    <li>Что собственник хочет видеть в отчёте в первую очередь?</li>
+    <li>Кто в компании будет главным по системе и принимать работу?</li>
+  </ul></div>
+</section>
+
+<section>
+  <div class="eyebrow" id="dalee">Следующий шаг</div>
+  <h2>Начнём с короткого разговора</h2>
+  <ol class="next">
+    <li><b>Разговор 30 минут</b>Уточняем склад, почту, ответственных. Присылаем ориентир по цене в евро на следующий рабочий день.</li>
+    <li><b>Этап 1, две недели</b>Подключаем тендеры. Вы видите результат.</li>
+    <li><b>Решение</b>Если нравится, продолжаем сроки и склад. Если нет, остаётесь с работающим модулем тендеров и платите только за этап 1.</li>
+  </ol>
+  <p class="lead">Ответьте на это сообщение, и мы пришлём приглашение на видеозвонок.</p>
+</section>
+
+<footer>Дастгир, ИИ-студия. Предложение не является офертой; условия сохраняем 30 дней с даты выше. Исполнитель и реквизиты, итоговая цена и порядок оплаты фиксируются в договоре.</footer>
+</div>
+</body>
+</html>
